@@ -148,7 +148,7 @@ $x$ in this example, and not just for $$\mbox{MSE}\left[\widehat{f}(x_0)\right]
 
 **Answers**:
 
-1. One possible "sanity check" would be seeing if changing $\sigma$? Plotting/visualizing? 
+1. One possible "sanity check" would be seeing if the Sum computed in the table is approximately equal to the MSE.
 2. The simulation procedure would be similar, except model predictions would be made on all the $x$ in the simulated sample (and not just at $x_0 = 0.95$ ) and MSE, Bias^2, and Variance would be computed based on all of the points (i.e. MSE computed as it usually is, bias and variance computed over all $x$).
 3. I would use the first model, with 2 degrees of freedom, to predict the point of interest. Even though it is more biased, it is also much less variable. Thus, the predictions it makes for points of interest $x_0$ can be reasonably expected to be close to $f(x_0) + b$, where $f(x)$ is the true function and $b$ is some amount of bias. This bias can be characterized based on prior observations. Even if we do not do so, we can still have confidence that a single prediction made by the model will be very close to a biased estimate of the true model, as opposed to having no confidence that any single prediction made by the model is particularly close to the true model.
 
