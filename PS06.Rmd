@@ -1,6 +1,6 @@
 ---
 title: "STAT/MATH 495: Problem Set 06"
-author: "WRITE YOUR NAME HERE"
+author: "Jonathan Che"
 date: "2017-10-17"
 output:
   html_document:
@@ -24,17 +24,9 @@ library(broom)
 library(knitr)
 ```
 
-
-
-
-
 # Collaboration
 
-Please indicate who you collaborated with on this assignment: 
-
-
-
-
+Worked a bit with Sarah T.
 
 # Setup
 
@@ -96,41 +88,67 @@ n_sample <- 10000
 # Computation
 
 ```{r}
+# Initialize empty vectors to store model predictions & simulated x0 values
+preds_df2 <- c()
+preds_df99 <- c()
+sample_y <- c()
+for (i in 1:n_sample){
+  # Generate random sample of points (under given parameters)
+  samp <- generate_sample(f, n, sigma)
+  sample_y <- c(sample_y, mean(samp$y))
+  
+  # Fit two models to points
+  m_df2 <- smooth.spline(x=samp$x, y=samp$y, df = 2)
+  m_df99 <- smooth.spline(x=samp$x, y=samp$y, df = 99)
+  
+  # Get model predictions for x=x0=0.95
+  pred_df2 <- unlist(predict(m_df2, x=x0)[2])
+  pred_df99 <- unlist(predict(m_df99, x=x0)[2])
+  
+  # Add new model prediction to list of predictions
+  preds_df2 <- c(preds_df2, pred_df2)
+  preds_df99 <- c(preds_df99, pred_df99)
+}
 
 ```
 
 
 # Tables
 
-As done in Lec 2.7, for both
-
-* An `lm` regression AKA a `smooth.splines(x, y, df=2)` model fit 
-* A `smooth.splines(x, y, df=99)` model fit 
-
-output tables comparing:
-
-|  MSE| bias_squared|   var| irreducible|   sum|
-|----:|------------:|-----:|-----------:|-----:|
-|     X|           X  |     X |      X |         X |
-
-where `sum = bias_squared + var + irreducible`. You can created cleanly formatted tables like the one above by piping a data frame into `knitr::kable(digits=4)`.
-
-
-
+```{r, warning=FALSE}
+true <- rep(f(x0), n_sample)
+true_noisy <- true + rnorm(n = n_sample, mean = 0, sd = sigma)
+df <- data.frame(preds_df2, preds_df99, true, true_noisy)
+df <- df %>%
+  gather(df, pred, preds_df2:preds_df99)
+df %>%
+  group_by(df) %>%
+  summarize(
+    MSE = mean((true_noisy - pred)^2),
+    `Bias^2` = (mean(pred) - mean(true))^2,
+    Variance = mean((pred - mean(pred))^2),
+    Irreducible = sigma^2
+  ) %>%
+  mutate(
+    Sum = `Bias^2` + Variance + Irreducible
+  ) %>%
+  knitr::kable(digits=4)
+```
 
 # Analysis
 
 **Questions**:
 
 1. Based on the topics covered in Lec 2.7, name one possible "sanity check" for your results. Name another if you can.
-1. In **two** sentences or less, give a rough sketch of what the procedure would
+2. In **two** sentences or less, give a rough sketch of what the procedure would
 be to get the breakdown of $$\mbox{MSE}\left[\widehat{f}(x)\right]$$ for *all*
 $x$ in this example, and not just for $$\mbox{MSE}\left[\widehat{f}(x_0)\right]
 = \mbox{MSE}\left[\widehat{f}(0.95)\right]$$.
-1. Which of the two models would you choose for predicting the point of interest and why?
+3. Which of the two models would you choose for predicting the point of interest and why?
 
 **Answers**:
 
-1.
-1.
-1.
+1. One possible "sanity check" would be seeing if changing $\sigma$? Plotting/visualizing? 
+2. The simulation procedure would be similar, except model predictions would be made on all the $x$ in the simulated sample (and not just at $x_0 = 0.95$ ) and MSE, Bias^2, and Variance would be computed based on all of the points (i.e. MSE computed as it usually is, bias and variance computed over all $x$).
+3. I would use the first model, with 2 degrees of freedom, to predict the point of interest. Even though it is more biased, it is also much less variable. Thus, the predictions it makes for points of interest $x_0$ can be reasonably expected to be close to $f(x_0) + b$, where $f(x)$ is the true function and $b$ is some amount of bias. This bias can be characterized based on prior observations. Even if we do not do so, we can still have confidence that a single prediction made by the model will be very close to a biased estimate of the true model, as opposed to having no confidence that any single prediction made by the model is particularly close to the true model.
+
